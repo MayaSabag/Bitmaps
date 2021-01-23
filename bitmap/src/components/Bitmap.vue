@@ -30,7 +30,6 @@ export default {
   },
   data() {
     return {
-      selectable: false,
       solved: false,
       bitmap: [],
       islandCount: 0,
@@ -56,7 +55,6 @@ export default {
         this.randomizeBitmap();
         break;
       case modes.DRAW:
-        this.drawBitmap();
         break;
       default:
         break;
@@ -66,6 +64,16 @@ export default {
   },
   created() {},
   methods: {
+    initBitmap() {
+      this.solved = false;
+      for (let i = 0; i < this.m; i++) {
+        this.bitmap.push([]);
+        for (let j = 0; j < this.n; j++) {
+          this.bitmap[i].push(0);
+        }
+      }
+    },
+
     initCanvas() {
       const canvas = document.getElementById("bitmapCanvas");
       const canvasContainer = document.getElementById("bitmapContainer");
@@ -80,19 +88,19 @@ export default {
       this.cellWidth = this.cellHeight = Math.min(this.cellWidth, this.cellHeight); // For a symmetrical (cube) cell
       
       // Uncomment this if should fit div (canvas container) size (makes asymmetrical cell if m != n)
-      // this.cellWidth =
-      //   canvasContainer.scrollWidth / this.n > this.smallWidth
-      //     ? canvasContainer.scrollWidth / this.n
-      //     : this.smallWidth;
-      // this.cellHeight =
-      //   canvasContainer.scrollHeight / this.m > this.smallHeight
-      //     ? canvasContainer.scrollHeight / this.m
-      //     : this.smallHeight;
+      /*this.cellWidth =
+        canvasContainer.scrollWidth / this.n > this.smallWidth
+          ? canvasContainer.scrollWidth / this.n
+          : this.smallWidth;
+      this.cellHeight =
+        canvasContainer.scrollHeight / this.m > this.smallHeight
+          ? canvasContainer.scrollHeight / this.m
+          : this.smallHeight; */
       
-      canvas.width = this.cellWidth * this.n;
-      canvas.height = this.cellHeight * this.m;
-      this.canvasWidth = canvas.width;
-      this.canvasHeight = canvas.height;
+      //canvas.width = this.cellWidth * this.n;
+      //canvas.height = this.cellHeight * this.m;
+      this.canvasWidth = canvas.width = this.cellWidth * this.n;
+      this.canvasHeight = canvas.height = this.cellHeight * this.m;
       this.canvasClientWidth = canvas.clientWidth;
       this.canvasClientHeight = canvas.clientHeight;
       this.context = canvas.getContext("2d");
@@ -155,16 +163,6 @@ export default {
       }
     },
 
-    initBitmap() {
-      this.solved = false;
-      for (let i = 0; i < this.m; i++) {
-        this.bitmap.push([]);
-        for (let j = 0; j < this.n; j++) {
-          this.bitmap[i].push(0);
-        }
-      }
-    },
-
     randomNum(range) {
       return Math.floor(Math.random() * range); // from 0 to range - 1
     },
@@ -191,10 +189,6 @@ export default {
       // }
     },
 
-    drawBitmap() {
-      this.selectable = true;
-    },
-
     colorString(islandId) {
       return `${
         islandId > 1 ? `hsl(${((islandId * 135) % 360) + 1},90%,30%)` : "black"
@@ -202,7 +196,6 @@ export default {
     },
 
     scanNeighbors(row, col, islandId) {
-      if (this.bitmap[row][col] > 1) return;
       this.bitmap[row][col] = islandId;
       for (let i = 0; i < this.neighborIndex.length; i++) {
         let destRow = row + this.neighborIndex[i][0];
