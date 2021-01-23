@@ -92,7 +92,7 @@ export default {
 
 <style>
 .center {
-  text-align: center !important;
+  text-align: center;
 }
 .page-container {
   display: flex;
