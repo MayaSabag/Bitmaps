@@ -1,46 +1,60 @@
 <template>
-  <v-container fill-height>
-    <v-row justify="center" align="center">
-      <v-col cols="12" sm="4">
-        <div v-if="!showBitmap">
-          <v-row>
-            <h2>Please enter bitmap size:</h2>
-            <v-text-field
-              label="Bitmap size: n, m"
-              outlined
-              v-model="bitmapSize"
-            ></v-text-field>
-          </v-row>
-          <v-row>
-            <v-col cols="12" class="center">
-              <v-btn
-                color="primary"
-                @click="createBitmap(operationModes.RANDOMIZE)"
-                >RANDOMIZE</v-btn
-              >
-            </v-col>
-          </v-row>
-          <v-row>
-            <v-col cols="12" class="center">
-              <v-btn color="primary" @click="createBitmap(operationModes.DRAW)"
-                >DRAW</v-btn
-              >
-            </v-col>
-          </v-row>
-        </div>
-      </v-col>
-    </v-row>
-    <Bitmap v-if="showBitmap" :n="n" :m="m" :mode="bitmapMode" @return="showBitmap = false"/>
+  <v-container fill-height class="aaa">
+    <v-form ref="form" lazy-validation>
+      <v-row justify="center" align="center">
+        <v-col cols="12" sm="8">
+          <div v-if="!showBitmap">
+            <v-row>
+              <h1>Please enter bitmap size:</h1>
+              <v-text-field
+                label="Bitmap size: n, m"
+                outlined
+                v-model="bitmapSize"
+                :rules="inputRules"
+                validate-on-blur
+              ></v-text-field>
+            </v-row>
+            <v-row>
+              <v-col class="center">
+                <v-btn
+                  large
+                  color="primary"
+                  @click="createBitmap(operationModes.RANDOMIZE)"
+                  >RANDOMIZE</v-btn
+                >
+              </v-col>
+            </v-row>
+            <v-row>
+              <v-col class="center">
+                <v-btn
+                  large
+                  color="primary"
+                  @click="createBitmap(operationModes.DRAW)"
+                  >DRAW</v-btn
+                >
+              </v-col>
+            </v-row>
+          </div>
+        </v-col>
+      </v-row>
+    </v-form>
+    <Bitmap
+      v-if="showBitmap"
+      :n="n"
+      :m="m"
+      :mode="bitmapMode"
+      @return="showBitmap = false"
+    />
   </v-container>
 </template>
 
 <script>
 import { modes } from "../enums";
-import Bitmap from './Bitmap';
+import Bitmap from "./Bitmap";
 
 export default {
   components: {
-    Bitmap
+    Bitmap,
   },
   data() {
     return {
@@ -50,39 +64,39 @@ export default {
       m: 0,
       n: 0,
       showBitmap: false,
+      inputRules: [
+        (v) => !!v || "Enter n, m",
+        (v) => /^\d+\s*,\s*\d+$/.test(v) || "Please enter values in the required format",
+      ],
     };
   },
   methods: {
     createBitmap(mode) {
       this.showBitmap = false;
-      let splittedValues = this.bitmapSize.split(",");
-      let n, m;
-      if (splittedValues && splittedValues.length > 1) {
-        n = Number(splittedValues[0]);
-        m = Number(splittedValues[1]);
-      }
+      if (this.$refs.form.validate()) {
+        let splittedValues = this.bitmapSize.split(",");
+        let n, m;
+        if (splittedValues && splittedValues.length > 1) {
+          n = Number(splittedValues[0]);
+          m = Number(splittedValues[1]);
+        }
 
-      if (!Number.isInteger(n) || !Number.isInteger(n)) {
-        alert("enter valid data");
-        return;
+        this.n = n;
+        this.m = m;
+        this.bitmapMode = mode;
+        this.showBitmap = true;
       }
-
-      this.n = n;
-      this.m = m;
-      this.bitmapMode = mode;
-      this.showBitmap = true;
     },
   },
 };
 </script>
 
 <style>
-/* table td {
-  border-width: 1px;
-  border-style: solid;
-  border-color: black;
-} */
 .center {
   text-align: center !important;
+}
+.aaa {
+  display: flex;
+  justify-content: center;
 }
 </style>
