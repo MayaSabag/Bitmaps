@@ -97,8 +97,6 @@ export default {
           ? canvasContainer.scrollHeight / this.m
           : this.smallHeight; */
       
-      //canvas.width = this.cellWidth * this.n;
-      //canvas.height = this.cellHeight * this.m;
       this.canvasWidth = canvas.width = this.cellWidth * this.n;
       this.canvasHeight = canvas.height = this.cellHeight * this.m;
       this.canvasClientWidth = canvas.clientWidth;
