@@ -1,14 +1,14 @@
-
-
 <template>
   <v-container fluid>
     <div id="bitmapContainer">
-      <canvas id="bitmapCanvas" @click="canvasClick"/>
+      <canvas id="bitmapCanvas" @click="canvasClick" />
     </div>
     <v-container class="bottom-container">
       <v-row>
         <v-col class="center">
-          <v-btn v-if="!solved" large color="primary" @click="solve">SOLVE</v-btn>
+          <v-btn v-if="!solved" large color="primary" @click="solve"
+            >SOLVE</v-btn
+          >
           <div v-else>
             <h4>FOUND {{ islandCount }} ISLANDS!</h4>
             <v-btn large color="primary" @click="emitReturn()">RETURN</v-btn>
@@ -16,18 +16,13 @@
         </v-col>
       </v-row>
     </v-container>
-    <InProgress v-if="showInProgress"/>
   </v-container>
 </template>
 
 <script>
 import { modes } from "../enums";
-import InProgress from "./InProgress";
 
 export default {
-  components: {
-    InProgress
-  },
   props: {
     n: Number,
     m: Number,
@@ -39,31 +34,22 @@ export default {
       solved: false,
       bitmap: [],
       islandCount: 0,
-      showInProgress: false,
-
+      
       canvasWidth: 0,
       canvasHeight: 0,
       canvasClientWidth: 0,
       canvasClientHeight: 0,
       context: null,
-      cellHeight: 5,
-      cellWidth: 5,
+      cellHeight: 0,
+      cellWidth: 0,
+      smallWidth: 8,
+      smallHeight: 8,
 
-      neighborIndex: [
-        [-1, -1],
-        [-1, 0],
-        [-1, 1],
-        [0, -1],
-        [0, 1],
-        [1, -1],
-        [1, 0],
-        [1, 1],
-      ],
+      neighborIndex: [[-1, -1], [-1, 0],[-1, 1],[0, -1], [0, 1], [1, -1], [1, 0], [1, 1],],
     };
   },
   computed: {},
   mounted() {
-    this.showInProgress = true;
     this.initBitmap();
     switch (this.mode) {
       case modes.RANDOMIZE:
@@ -77,20 +63,34 @@ export default {
     }
 
     this.initCanvas();
-    this.showInProgress = false;
   },
   created() {},
   methods: {
     initCanvas() {
       const canvas = document.getElementById("bitmapCanvas");
-      const canContainer = document.getElementById("bitmapContainer");
-     // this.cellWidth = canContainer.offsetWidth / this.n > this.cellWidth ? canContainer.offsetWidth / this.n : this.cellWidth;
-     // this.cellHeight = canContainer.offsetHeight / this.m > this.cellHeight ? canContainer.offsetHeight / this.m : this.cellHeight;
-      this.cellWidth = canContainer.scrollWidth / this.n > this.cellWidth ? canContainer.scrollWidth / this.n : this.cellWidth;
-      this.cellHeight = canContainer.scrollHeight / this.m > this.cellHeight ? canContainer.scrollHeight / this.m : this.cellHeight;
+      const canvasContainer = document.getElementById("bitmapContainer");
+
+      // Fixed cell size
+      this.cellWidth =  canvasContainer.scrollWidth / this.n > this.smallWidth
+          ? this.smallWidth * 5
+          : this.smallWidth;
+      this.cellHeight = canvasContainer.scrollHeight / this.m > this.smallHeight
+          ? this.smallHeight * 5
+          : this.smallHeight;
+      this.cellWidth = this.cellHeight = Math.min(this.cellWidth, this.cellHeight); // For a symmetrical (cube) cell
+      
+      // Uncomment this if should fit div (canvas container) size (makes asymmetrical cell if m != n)
+      // this.cellWidth =
+      //   canvasContainer.scrollWidth / this.n > this.smallWidth
+      //     ? canvasContainer.scrollWidth / this.n
+      //     : this.smallWidth;
+      // this.cellHeight =
+      //   canvasContainer.scrollHeight / this.m > this.smallHeight
+      //     ? canvasContainer.scrollHeight / this.m
+      //     : this.smallHeight;
+      
       canvas.width = this.cellWidth * this.n;
       canvas.height = this.cellHeight * this.m;
-      
       this.canvasWidth = canvas.width;
       this.canvasHeight = canvas.height;
       this.canvasClientWidth = canvas.clientWidth;
@@ -100,12 +100,13 @@ export default {
       this.draw(true);
     },
 
-    fillCell(x, y) {
+    fillCell(x, y, value) {
+      this.context.fillStyle = this.colorString(value);
       this.context.fillRect(
         1 + this.cellWidth * x,
         1 + this.cellHeight * y,
-        // the -1 in width and height is room for seperation between cells
-        this.cellWidth - 1, 
+        // The -1 on width and height is room for seperation between cells
+        this.cellWidth - 1,
         this.cellHeight - 1
       );
     },
@@ -116,8 +117,7 @@ export default {
           (e.offsetX * this.canvasWidth) / this.canvasClientWidth;
         const canvasRelativeY =
           (e.offsetY * this.canvasHeight) / this.canvasClientHeight;
-        this.context.fillStyle = "black";
-
+        
         let x = Math.floor(canvasRelativeX / this.cellWidth);
         let y = Math.floor(canvasRelativeY / this.cellHeight);
         //alert(`${x}, ${y}`);
@@ -128,28 +128,28 @@ export default {
           y < this.m &&
           this.bitmap[y][x] == 0
         ) {
-          this.fillCell(x, y);
+          
           let row = this.bitmap[y];
           row[x] = 1;
           this.bitmap.splice(y, 1, row);
+          this.fillCell(x, y, this.bitmap[y][x]); // Colors it black
         }
       }
     },
 
-    draw(init) {
-      for (let x = 0; x < this.m; x++) {
-        for (let y = 0; y < this.n; y++) {
-          if (init) {
+    draw(paintRect) {
+      for (let i = 0; i < this.m; i++) {
+        for (let j = 0; j < this.n; j++) {
+          if (paintRect) {
             this.context.strokeRect(
-              this.cellWidth * y,
-              this.cellHeight * x,
+              this.cellWidth * j,
+              this.cellHeight * i,
               this.cellWidth,
               this.cellHeight
             );
           }
-          if (this.bitmap[x][y] >= 1) {
-            this.context.fillStyle = this.colorString(this.bitmap[x][y]);
-            this.fillCell(y, x);
+          if (this.bitmap[i][j] >= 1) {
+            this.fillCell(j, i, this.bitmap[i][j]);
           }
         }
       }
@@ -181,6 +181,7 @@ export default {
         this.bitmap[randomRow][randomCol] = 1;
       }
 
+      // Test case - big island
       // if (this.m == 1000 && this.n == 1000) {
       //   for (let i = 0; i < this.m; i++) {
       //     for (let j = 0; j < this.n; j++) {
@@ -195,7 +196,9 @@ export default {
     },
 
     colorString(islandId) {
-      return `${islandId > 1 ? `hsl(${(islandId * 130)% 360 + 1},90%,30%)` : "black"}`;
+      return `${
+        islandId > 1 ? `hsl(${((islandId * 135) % 360) + 1},90%,30%)` : "black"
+      }`;
     },
 
     scanNeighbors(row, col, islandId) {
@@ -218,7 +221,6 @@ export default {
 
     solve() {
       try {
-        this.showInProgress = true;
         this.islandCount = 0;
         this.solved = false;
         let neighborQueue = [];
@@ -226,10 +228,10 @@ export default {
           for (let j = 0; j < this.n; j++) {
             if (this.bitmap[i][j] == 1) {
               this.islandCount++;
-              //this.scanNeighbors(i, j, this.islandCount + 1); // for recursive solution
-              let currentIslandId = this.islandCount + 1;
+              //this.scanNeighbors(i, j, this.islandCount + 1); // For recursive solution
+              let currentIslandId = this.islandCount + 1; // Starting Ids from 2, 1 is black\unprocessed
               this.bitmap[i][j] = currentIslandId;
-              
+
               // Queue solution
               neighborQueue = [];
               neighborQueue.push(i * this.n + j);
@@ -258,13 +260,13 @@ export default {
           }
         }
 
-        this.draw(true);
+        this.draw(true); // I passed true so all cells are repainted, to see the borders. Passing false here is possible too, it just 
+        // covers the inner cell borders inside the islands with its color
       } catch (ex) {
         alert(ex);
       } finally {
         // So we can return
         this.solved = true;
-        this.showInProgress = false;
       }
     },
 
@@ -278,7 +280,7 @@ export default {
 <style scoped>
 canvas {
   display: block;
-  margin:  0 auto;
+  margin: 0 auto;
   margin-right: auto;
   margin-left: auto;
   top: 0;
@@ -290,9 +292,9 @@ canvas {
   /* position: absolute; */
   bottom: 0px;
 }
-#bitmapContainer{
-    height: 500px; 
-    width: 100%; 
-    overflow: scroll;
+#bitmapContainer {
+  height: 500px;
+  width: 100%;
+  overflow: scroll;
 }
 </style>

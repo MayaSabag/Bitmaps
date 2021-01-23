@@ -1,5 +1,5 @@
 <template>
-  <v-container fill-height class="aaa">
+  <v-container fill-height class="page-container">
     <v-form ref="form" lazy-validation>
       <v-row justify="center" align="center">
         <v-col cols="12" sm="8">
@@ -72,7 +72,6 @@ export default {
   },
   methods: {
     createBitmap(mode) {
-      this.showBitmap = false;
       if (this.$refs.form.validate()) {
         let splittedValues = this.bitmapSize.split(",");
         let n, m;
@@ -95,7 +94,7 @@ export default {
 .center {
   text-align: center !important;
 }
-.aaa {
+.page-container {
   display: flex;
   justify-content: center;
 }
